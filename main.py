@@ -4,7 +4,7 @@ import os
 from urllib.parse import urlparse
 app = Flask(__name__)
 # Подключение к БД
-DATABASE_URL = os.environ.get('postgresql://serverless_db_orpn_user:2d6q5PV1qMUhUIYAt8vJssi0KaivT38U@dpg-d45khv9r0fns73f7206g-a/serverless_db_orpn')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
  url = urlparse(DATABASE_URL)
  conn = psycopg2.connect(
@@ -34,7 +34,10 @@ def save_message():
  data = request.get_json()
  message = data.get('message', '') if data else ''
  with conn.cursor() as cur:
- cur.execute("INSERT INTO messages (content) VALUES (%s)", (message,))
+ # Стало:
+ cur.execute("""
+     SELECT id, content, created_at FROM messages ORDER BY id DESC LIMIT 10
+ """)
  conn.commit()
  return jsonify({"status": "saved", "message": message})
 @app.route('/messages')
